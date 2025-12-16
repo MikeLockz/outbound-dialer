@@ -19,7 +19,7 @@ export class CallController {
       }
 
       const result = await vapiService.initiateCall(target_number, system_prompt);
-      res.json({ success: true, call_id: result.id });
+      res.json({ success: true, call_id: (result as any).id });
     } catch (error) {
       console.error(error);
       res.status(502).json({ error: 'Failed to initiate call' });
