@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Outbound Dialer API
+  version: 1.0.0
+  description: API for initiating calls and handling Vapi webhooks.
+
+servers:
+  - url: http://localhost:8081
+    description: Nginx Proxy
+  - url: http://localhost:3001
+    description: App Server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  version:
+                    type: string
+
+  /call:
+    post:
+      summary: Initiate an outbound call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target_number
+                - system_prompt
+              properties:
+                target_number:
+                  type: string
+                  pattern: ^\+[1-9]\d{1,14}$
+                  description: E.164 phone number
+                system_prompt:
+                  type: string
+                  description: Instructions for the AI
+      responses:
+        '200':
+          description: Call initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  call_id:
+                    type: string
+        '400':
+          description: Invalid input
+        '502':
+          description: Upstream (Vapi) error
+
+  /webhook/vapi:
+    post:
+      summary: Vapi Webhook Handler
+      description: Receives events from Vapi (function calls, transcripts).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Event processed
+          content:
+            application/json:
+              schema:
+                type: object
