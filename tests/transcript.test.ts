@@ -18,7 +18,12 @@ describe('TranscriptService', () => {
   });
 
   it('should broadcast message to open clients', () => {
-    const msg = { text: 'Hello' };
+    const msg = {
+      type: 'transcript' as const,
+      role: 'assistant' as const,
+      content: 'Hello',
+      timestamp: new Date().toISOString()
+    };
     transcriptService.broadcast(msg);
     expect(mockClient.send).toHaveBeenCalledWith(JSON.stringify(msg));
   });

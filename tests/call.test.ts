@@ -3,16 +3,36 @@ import { CallController } from '../src/controllers/call';
 import { VapiService } from '../src/services/vapi';
 
 // Mock VapiService
-jest.mock('../src/services/vapi');
-const mockVapiService = new VapiService();
+jest.mock('../src/services/vapi', () => {
+  const mInitiateCall = jest.fn();
+  const MockVapiService = jest.fn().mockImplementation(() => {
+    return {
+      initiateCall: mInitiateCall,
+    };
+  });
+  // Attach spy to the class mock to access it in tests
+  (MockVapiService as any).mockInitiateCall = mInitiateCall;
+  return {
+    VapiService: MockVapiService,
+  };
+});
+
+jest.mock('../src/services/prompt', () => ({
+  PromptService: {
+    getHydratedPrompt: jest.fn().mockReturnValue('Hydrated System Prompt'),
+  },
+}));
+import { PromptService } from '../src/services/prompt';
 
 describe('CallController', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let statusSpy: jest.Mock;
   let jsonSpy: jest.Mock;
+  let mockInitiateCall: jest.Mock;
 
   beforeEach(() => {
+    mockInitiateCall = (VapiService as any).mockInitiateCall;
     statusSpy = jest.fn().mockReturnThis();
     jsonSpy = jest.fn();
     mockResponse = {
@@ -20,40 +40,49 @@ describe('CallController', () => {
       json: jsonSpy,
     };
     mockRequest = {};
-    (VapiService as jest.Mock).mockClear();
-    (mockVapiService.initiateCall as jest.Mock).mockClear();
+    mockInitiateCall.mockClear();
+    (PromptService.getHydratedPrompt as jest.Mock).mockClear();
   });
 
   it('should initiate a call successfully with valid data', async () => {
     mockRequest.body = {
       target_number: '+1234567890',
-      system_prompt: 'Test prompt',
+      license_plate: 'ABC1234',
+      toll_bill_id: 'BILL999',
+      toll_date: '2023-10-01',
     };
-    (mockVapiService.initiateCall as jest.Mock).mockResolvedValue({ id: 'call-id-123' });
+    (PromptService.getHydratedPrompt as jest.Mock).mockReturnValue('Hydrated System Prompt');
+    mockInitiateCall.mockResolvedValue({ id: 'call-id-123' });
 
     await CallController.initiate(mockRequest as Request, mockResponse as Response);
 
-    expect(mockVapiService.initiateCall).toHaveBeenCalledWith('+1234567890', 'Test prompt');
+    expect(PromptService.getHydratedPrompt).toHaveBeenCalledWith('ABC1234', 'BILL999', '2023-10-01');
+    expect(mockInitiateCall).toHaveBeenCalledWith('+1234567890', 'Hydrated System Prompt');
     expect(statusSpy).not.toHaveBeenCalled();
     expect(jsonSpy).toHaveBeenCalledWith({ success: true, call_id: 'call-id-123' });
   });
 
   it('should return 400 if target_number is missing', async () => {
-    mockRequest.body = { system_prompt: 'Test prompt' };
+    mockRequest.body = {
+      license_plate: 'ABC1234',
+      toll_bill_id: 'BILL999',
+      toll_date: '2023-10-01',
+    };
 
     await CallController.initiate(mockRequest as Request, mockResponse as Response);
 
-    expect(mockVapiService.initiateCall).not.toHaveBeenCalled();
+    expect(mockInitiateCall).not.toHaveBeenCalled();
     expect(statusSpy).toHaveBeenCalledWith(400);
     expect(jsonSpy).toHaveBeenCalledWith({ error: 'Missing required fields' });
   });
 
-  it('should return 400 if system_prompt is missing', async () => {
+  it('should return 400 if missing other required fields', async () => {
     mockRequest.body = { target_number: '+1234567890' };
+    // Missing license_plate, toll_bill_id, toll_date
 
     await CallController.initiate(mockRequest as Request, mockResponse as Response);
 
-    expect(mockVapiService.initiateCall).not.toHaveBeenCalled();
+    expect(mockInitiateCall).not.toHaveBeenCalled();
     expect(statusSpy).toHaveBeenCalledWith(400);
     expect(jsonSpy).toHaveBeenCalledWith({ error: 'Missing required fields' });
   });
@@ -61,12 +90,14 @@ describe('CallController', () => {
   it('should return 400 if target_number is in an invalid format', async () => {
     mockRequest.body = {
       target_number: '12345',
-      system_prompt: 'Test prompt',
+      license_plate: 'ABC1234',
+      toll_bill_id: 'BILL999',
+      toll_date: '2023-10-01',
     };
 
     await CallController.initiate(mockRequest as Request, mockResponse as Response);
 
-    expect(mockVapiService.initiateCall).not.toHaveBeenCalled();
+    expect(mockInitiateCall).not.toHaveBeenCalled();
     expect(statusSpy).toHaveBeenCalledWith(400);
     expect(jsonSpy).toHaveBeenCalledWith({ error: 'Invalid phone number format' });
   });
@@ -74,14 +105,17 @@ describe('CallController', () => {
   it('should return 502 if VapiService initiateCall fails', async () => {
     mockRequest.body = {
       target_number: '+1234567890',
-      system_prompt: 'Test prompt',
+      license_plate: 'ABC1234',
+      toll_bill_id: 'BILL999',
+      toll_date: '2023-10-01',
     };
-    (mockVapiService.initiateCall as jest.Mock).mockRejectedValue(new Error('Vapi error'));
+    (PromptService.getHydratedPrompt as jest.Mock).mockReturnValue('Hydrated System Prompt');
+    mockInitiateCall.mockRejectedValue(new Error('Vapi error'));
 
     await CallController.initiate(mockRequest as Request, mockResponse as Response);
 
-    expect(mockVapiService.initiateCall).toHaveBeenCalledWith('+1234567890', 'Test prompt');
+    expect(mockInitiateCall).toHaveBeenCalledWith('+1234567890', 'Hydrated System Prompt');
     expect(statusSpy).toHaveBeenCalledWith(502);
-    expect(jsonSpy).toHaveBeenCalledWith({ error: 'Failed to initiate call' });
+    expect(jsonSpy).toHaveBeenCalledWith({ error: 'Failed to initiate call', details: 'Vapi error' });
   });
 });
