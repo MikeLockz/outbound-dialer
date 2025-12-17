@@ -11,13 +11,16 @@ function App() {
   const [isError, setIsError] = useState(false);
   const { messages: transcriptMessages, clearMessages } = useTranscript(); // Use the hook
 
-  const handleInitiateCall = async (targetNumber: string, systemPrompt: string) => {
+  const handleInitiateCall = async (
+    targetNumber: string,
+    tollDetails: { licensePlate: string; tollBillId: string; tollDate: string }
+  ) => {
     setIsLoading(true);
     setMessage('');
     setIsError(false);
     clearMessages(); // Clear messages on new call initiation
     try {
-      const response = await initiateCall(targetNumber, systemPrompt);
+      const response = await initiateCall(targetNumber, tollDetails);
       setMessage(`Call initiated successfully! Call ID: ${response.call_id}`);
       setIsError(false);
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -3,10 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 
 interface CallFormProps {
-  onInitiateCall: (targetNumber: string, systemPrompt: string) => void;
+  onInitiateCall: (targetNumber: string, tollDetails: { licensePlate: string; tollBillId: string; tollDate: string }) => void;
   isLoading: boolean;
 }
 
@@ -22,22 +21,13 @@ export const CallForm: React.FC<CallFormProps> = ({ onInitiateCall, isLoading })
   const [tollBillId, setTollBillId] = useState('1234ABCD7890');
   const [tollDate, setTollDate] = useState(formattedYesterday);
 
-  const [systemPrompt, setSystemPrompt] = useState(
-    'You are calling a road toll operating company to dispute an improper charge.\n' +
-    '- Situation: You were charged for a toll despite using the HOV lane correctly.\n' +
-    '- Evidence: You had 3 people in the car (yourself + 2 children in the backseat). \n' +
-    '- Requirement: The toll needs to be removed immediately.\n' +
-    '- Strategy: Be persistent given the camera likely missed the small children, but remain polite. Convincingly argue that you were in full compliance with HOV-3 rules.'
-  );
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (targetNumber && systemPrompt) {
-      const fullPrompt = `License Plate: ${licensePlate}\nToll Bill ID: ${tollBillId}\nDate of Toll: ${tollDate}\n\n${systemPrompt}`;
-      onInitiateCall(targetNumber, fullPrompt);
+    if (targetNumber && licensePlate && tollBillId && tollDate) {
+      onInitiateCall(targetNumber, { licensePlate, tollBillId, tollDate });
     } else {
       // Basic validation feedback for the user
-      alert('Please fill in both Target Number and System Prompt.');
+      alert('Please fill in all fields (Target Number, License Plate, Toll Bill ID, Date).');
     }
   };
 
@@ -45,7 +35,7 @@ export const CallForm: React.FC<CallFormProps> = ({ onInitiateCall, isLoading })
     <Card className="w-[450px]">
       <CardHeader>
         <CardTitle>Initiate New Call</CardTitle>
-        <CardDescription>Configure the outbound number and system prompt for the AI dialer.</CardDescription>
+        <CardDescription>Configure the outbound number for the AI dialer.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid w-full items-center gap-4">
@@ -92,17 +82,6 @@ export const CallForm: React.FC<CallFormProps> = ({ onInitiateCall, isLoading })
             />
           </div>
 
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="systemPrompt">System Prompt Strategy</Label>
-            <Textarea
-              id="systemPrompt"
-              placeholder="e.g., You are an AI assistant helping with customer support..."
-              value={systemPrompt}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSystemPrompt(e.target.value)}
-              className="min-h-[100px]"
-              disabled={isLoading}
-            />
-          </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Initiating Call...' : 'Initiate Call'}
           </Button>

@@ -1,50 +1,48 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: 0.0.0 -> 1.0.0
+- List of modified principles:
+  - Added: I. Reliability First
+  - Added: II. Container Native
+  - Added: III. Observability
+  - Added: IV. Test-Driven Development (NON-NEGOTIABLE)
+  - Added: V. Security
+- Added sections: System Architecture, Development Workflow
+- Templates requiring updates:
+  - .specify/templates/plan-template.md (✅ updated / ⚠ pending)
+  - .specify/templates/spec-template.md (✅ updated / ⚠ pending)
+  - .specify/templates/tasks-template.md (✅ updated / ⚠ pending)
+- Follow-up TODOs: None
+-->
+# Outbound Dialer Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Reliability First
+The system must be designed for high availability and fault tolerance. Failures in one component (e.g., a single call) must not cascade. Graceful degradation and automatic recovery mechanisms are required.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Container Native
+All application components must be containerized using Docker. Deployment is managed via Docker Compose. No dependency on host system libraries is allowed outside the container runtime.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Observability
+Comprehensive structured logging is mandatory for all components. Metrics for call states, error rates, and system performance must be exposed. Debuggability via logs is a primary requirement.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Pragmatic Testing
+Focus on high-value unit tests for core business logic. Comprehensive end-to-end (E2E) and load testing are not required for this phase. Prioritize velocity and functional completeness.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Security
+Secrets must be managed securely and never checked into version control. Applications must run as non-root users where possible. Public entry points are strictly controlled (e.g., Nginx on 8081).
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## System Architecture
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+The system consists of a backend Server (port 3001) and an Nginx reverse proxy (port 8081). It is deployed alongside Coolify but operates via standalone Docker Compose. Architecture must support horizontal scaling if needed.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+All changes follow a standard Pull Request workflow. Code must pass all tests and linting before merge. Documentation (specs, plans) must be updated in step with code changes.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Amendments to this constitution require a Pull Request with explicit justification. The `speckit.constitution` command governs updates. All feature specifications must cite compliance with these principles.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-12-15 | **Last Amended**: 2025-12-15
