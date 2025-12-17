@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { VapiService } from '../services/vapi';
 import fs from 'fs';
 import path from 'path';
+import { PromptService } from '../services/prompt';
 
 const vapiService = new VapiService();
 
@@ -20,13 +21,7 @@ export class CallController {
         return;
       }
 
-      const promptPath = path.join(__dirname, '../prompts/toll-dispute.md');
-      let system_prompt = fs.readFileSync(promptPath, 'utf-8');
-
-      system_prompt = system_prompt
-        .replace(/{{LICENSE_PLATE}}/g, license_plate)
-        .replace(/{{TOLL_BILL_ID}}/g, toll_bill_id)
-        .replace(/{{TOLL_DATE}}/g, toll_date);
+      const system_prompt = PromptService.getHydratedPrompt(license_plate, toll_bill_id, toll_date);
 
       const result = await vapiService.initiateCall(target_number, system_prompt);
       res.json({ success: true, call_id: (result as any).id });

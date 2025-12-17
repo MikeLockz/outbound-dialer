@@ -14,6 +14,11 @@ app.get('/health', (req, res) => {
 app.post('/call', CallController.initiate);
 app.post('/webhook/vapi', WebhookController.handle);
 
+// Simulation Routes
+import { SimulationController } from './controllers/simulation';
+app.post('/api/simulate/start', SimulationController.start);
+app.post('/api/simulate/chat', SimulationController.chat);
+
 // Serve static files from the React app's build output
 app.use(express.static(path.join(__dirname, '../src/client/dist')));
 
