@@ -40,6 +40,29 @@ Access the Web UI in your browser at `http://localhost:8081`. This interface all
 - Initiate calls directly from the browser.
 - View real-time transcripts of ongoing calls.
 
+## Architecture
+
+```mermaid
+graph TD
+    User[User / Browser]
+    
+    subgraph Docker Host
+        Nginx[Nginx Proxy :8081]
+        App[Node.js App :3001]
+    end
+
+    Vapi[Vapi.ai Service]
+
+    %% Interactions
+    User -- "HTTP :8081" --> Nginx
+    User -- "WebSocket (Transcripts)" --> Nginx
+    Nginx -- "Proxy" --> App
+    
+    App -- "Serve Static Files" --> User
+    App -- "POST /call" --> Vapi
+    Vapi -- "Webhook (Function/Speech)" --> App
+```
+
 ## API Usage
 
 ### Initiate Call
