@@ -10,13 +10,26 @@ export class WebhookController {
       if (body.message.type === 'function-call') {
         const { functionCall } = body.message;
         console.log('Function call received:', functionCall);
-        
+
+        if (functionCall?.name === 'complete_call') {
+          console.log('Handling complete_call');
+          res.json({
+            results: [
+              {
+                result: 'Call completed successfully.',
+              },
+            ],
+            ended: true,
+          });
+          return;
+        }
+
         res.json({
           results: [
-              {
-                  result: `Processed function ${functionCall?.name}`
-              }
-          ]
+            {
+              result: `Processed function ${functionCall?.name}`,
+            },
+          ],
         });
         return;
       }
@@ -24,11 +37,11 @@ export class WebhookController {
       if (body.message.type === 'speech-update') {
         const transcriptService = req.app.get('transcriptService') as TranscriptService;
         if (transcriptService) {
+          const role = body.message.role === 'user' || body.message.role === 'assistant' ? body.message.role : 'assistant';
           transcriptService.broadcast({
             type: 'transcript',
-            call_id: body.message.call?.id,
-            role: body.message.role,
-            text: body.message.transcript,
+            role: role,
+            content: body.message.transcript || '',
             timestamp: new Date().toISOString(),
           });
         }

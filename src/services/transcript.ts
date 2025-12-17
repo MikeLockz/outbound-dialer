@@ -1,4 +1,5 @@
 import { WebSocketServer, WebSocket } from 'ws';
+import { TranscriptMessage } from '../types/transcript';
 
 export class TranscriptService {
   private wss: WebSocketServer;
@@ -7,8 +8,8 @@ export class TranscriptService {
     this.wss = wss;
   }
 
-  broadcast(message: any) {
-    this.wss.clients.forEach((client) => {
+  broadcast(message: TranscriptMessage) {
+    this.wss.clients.forEach((client: WebSocket) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(message));
       }
