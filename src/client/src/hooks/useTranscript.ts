@@ -9,7 +9,7 @@ export const useTranscript = () => {
 
   const connect = useCallback(() => {
     if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
-      return; // Already connected or connecting
+      return wsRef.current; // Already connected or connecting
     }
 
     if (reconnectTimeoutRef.current) {
@@ -20,13 +20,19 @@ export const useTranscript = () => {
     // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // const host = window.location.host; // This will include port if present
     const ws = new WebSocket('ws://localhost:3001/transcripts'); // Connect directly to backend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ws as any)._isCleanedUp = false;
 
     ws.onopen = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((ws as any)._isCleanedUp) return;
       console.log('WebSocket connected.');
       setShouldReconnect(false); // Reset reconnect flag on successful connection
     };
 
     ws.onmessage = (event) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((ws as any)._isCleanedUp) return;
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'transcript') {
@@ -38,6 +44,8 @@ export const useTranscript = () => {
     };
 
     ws.onclose = (event) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((ws as any)._isCleanedUp) return;
       console.log('WebSocket disconnected:', event.code, event.reason);
       if (!event.wasClean) {
         // Attempt to reconnect if not a clean close
@@ -46,19 +54,34 @@ export const useTranscript = () => {
     };
 
     ws.onerror = (error) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((ws as any)._isCleanedUp) return;
       console.error('WebSocket error:', error);
       ws.close(); // Close to trigger onclose and potential reconnect
     };
 
     wsRef.current = ws;
+    return ws;
   }, []);
 
   useEffect(() => {
-    connect();
+    const wsInstance = connect();
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Component unmounted');
+      if (wsInstance) {
+        // Mark as cleaned up to suppress handlers
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (wsInstance as any)._isCleanedUp = true;
+
+        wsInstance.onopen = null;
+        wsInstance.onclose = null;
+        wsInstance.onerror = null;
+        wsInstance.onmessage = null;
+
+        wsInstance.close(1000, 'Component unmounted');
+        if (wsRef.current === wsInstance) {
+          wsRef.current = null;
+        }
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
