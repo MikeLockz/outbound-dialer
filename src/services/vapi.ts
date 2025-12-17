@@ -46,6 +46,9 @@ export class VapiService {
                 },
               },
             },
+            {
+              type: 'dtmf',
+            },
           ],
         },
       } as any,

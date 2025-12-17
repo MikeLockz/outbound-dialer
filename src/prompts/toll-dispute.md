@@ -25,7 +25,7 @@
 #### **IVR Navigation**
 
 * **Action/Goal:** Reach a human representative efficiently.
-* **Logic:** If an IVR answers, interrupt/respond using keywords: "Representative," "Operator," or "Toll Dispute." If the IVR asks for an account or ID first, provide only the Toll Billing ID and immediately follow with "Representative."
+* **Logic:** If an IVR answers, interrupt/respond using keywords: "Representative," "Operator," or "Toll Dispute." If the IVR asks to press a key, use the `dtmf` tool. If the IVR asks for an account or ID first, provide only the Toll Billing ID (you may use `dtmf` if appropriate, e.g. digits + #) and immediately follow with "Representative."
 
 #### **1. Initial Statement & Verification**
 

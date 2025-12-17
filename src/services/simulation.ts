@@ -26,6 +26,23 @@ export class SimulationService {
                         },
                     },
                 },
+                {
+                    type: 'function',
+                    function: {
+                        name: 'dtmf',
+                        description: 'Sends DTMF tones (keypad presses) to the call. Use this for IVR navigation (e.g. "Press 1").',
+                        parameters: {
+                            type: 'object',
+                            properties: {
+                                digits: {
+                                    type: 'string',
+                                    description: 'The digits to send (e.g. "1", "123#").',
+                                },
+                            },
+                            required: ['digits'],
+                        },
+                    },
+                },
             ],
         });
 
@@ -33,8 +50,14 @@ export class SimulationService {
 
         if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
             const toolCall = choice.message.tool_calls[0];
-            if (toolCall.type === 'function' && toolCall.function.name === 'complete_call') {
-                return "[CALL ENDED]";
+            if (toolCall.type === 'function') {
+                if (toolCall.function.name === 'complete_call') {
+                    return "[CALL ENDED]";
+                }
+                if (toolCall.function.name === 'dtmf') {
+                    const args = JSON.parse(toolCall.function.arguments);
+                    return `[DTMF: ${args.digits}]`;
+                }
             }
         }
 
